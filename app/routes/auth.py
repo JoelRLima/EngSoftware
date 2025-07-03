@@ -82,7 +82,7 @@ def login():
 
     user = User.query.filter_by(username=username).first()
     if user and bcrypt.check_password_hash(user.password_hash, password):
-        token = generate_token(identity=user.id)
+        token = generate_token(identity=str(user.id))  # 🔥 converte para string
         return jsonify({'access_token': token}), 200
     return jsonify({'message': 'Usuário ou senha inválidos'}), 401
 
@@ -109,7 +109,7 @@ def login():
     }
 })
 def edit_account():
-    user_id = get_jwt_identity()
+    user_id = int(get_jwt_identity())
     data = request.get_json()
     if not data:
         return jsonify({'message': 'Corpo da requisição não pode ser vazio'}), 400
