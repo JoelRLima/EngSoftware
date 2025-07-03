@@ -134,3 +134,43 @@ def edit_account():
 
     db.session.commit()
     return jsonify({'message': 'Conta atualizada com sucesso'}), 200
+
+@auth_bp.route('/delete', methods=['DELETE'])
+@jwt_required()
+@swag_from({
+    'tags': ['Auth'],
+    'security': [{'BearerAuth': []}],
+    'parameters': [{
+        'name': 'body',
+        'in': 'body',
+        'required': True,
+        'schema': {
+            'type': 'object',
+            'properties': {
+                'password': {'type': 'string'}
+            },
+            'required': ['password']
+        }
+    }],
+    'responses': {
+        200: {'description': 'Conta excluída com sucesso'},
+        400: {'description': 'Senha ausente ou inválida'},
+        401: {'description': 'Senha incorreta'}
+    }
+})
+def delete_account():
+    user_id = int(get_jwt_identity())
+    data = request.get_json()
+
+    if not data or 'password' not in data:
+        return jsonify({'message': 'Senha é obrigatória'}), 400
+
+    password = data['password']
+    user = User.query.get(user_id)
+
+    if not user or not bcrypt.check_password_hash(user.password_hash, password):
+        return jsonify({'message': 'Senha incorreta'}), 401
+
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'message': 'Conta excluída com sucesso'}), 200
